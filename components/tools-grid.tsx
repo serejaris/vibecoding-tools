@@ -1,613 +1,53 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ToolCard } from "./tool-card"
 import { Input } from "@/components/ui/input"
-import { Search } from "lucide-react"
-
-const tools = [
-  // === AI IDE ===
-  {
-    id: "cursor",
-    title: "Cursor",
-    description:
-      "AI-powered IDE на базе VS Code. Tab-автокомплит, Composer Mode для многофайловых изменений, фоновые агенты.",
-    category: "ide",
-    tags: ["IDE", "VS Code", "Multi-model"],
-    url: "https://cursor.com",
-    pricing: "$20/мес Pro",
-    pricingType: "freemium",
-    features: [
-      "Tab-автокомплит с предсказанием",
-      "Composer Mode для многофайловых изменений",
-      "Background agents",
-      "Чат с контекстом всего проекта",
-      "Privacy Mode",
-    ],
-    llm: "GPT-4o, Claude 3.5/4, Gemini",
-    openSource: false,
-    level: "Средний / Продвинутый",
-  },
-  {
-    id: "windsurf",
-    title: "Windsurf",
-    description: "AI IDE от Codeium с агентным режимом Cascade и собственной быстрой моделью SWE-1.5.",
-    category: "ide",
-    tags: ["IDE", "Codeium", "Agent"],
-    url: "https://windsurf.com",
-    pricing: "$15/мес Pro",
-    pricingType: "freemium",
-    features: [
-      "Cascade — агентный режим",
-      "SWE-1.5 модель (13x быстрее Sonnet)",
-      "App Deploys на Vercel/AWS",
-      "Автокомплит 70+ языков",
-    ],
-    llm: "SWE-1/1.5, Claude, GPT-5",
-    openSource: false,
-    level: "Начинающий / Средний",
-  },
-  {
-    id: "void",
-    title: "Void Editor",
-    description: "Open Source AI IDE. Полный контроль над приватностью, работа с локальными моделями через Ollama.",
-    category: "ide",
-    tags: ["IDE", "Open Source", "Privacy"],
-    url: "https://voideditor.com",
-    pricing: "Бесплатно",
-    pricingType: "free",
-    features: [
-      "100% бесплатный и open source",
-      "Любые LLM включая локальные",
-      "Agent Mode с MCP",
-      "Checkpoints для отката",
-    ],
-    llm: "GPT, Claude, Gemini, Ollama",
-    openSource: true,
-    level: "Средний / Продвинутый",
-  },
-  {
-    id: "pearai",
-    title: "PearAI",
-    description: "Open Source AI IDE с интеграцией лучших инструментов: Aider, Supermaven, Continue.",
-    category: "ide",
-    tags: ["IDE", "Open Source", "Integrations"],
-    url: "https://trypear.ai",
-    pricing: "Бесплатно",
-    pricingType: "free",
-    features: [
-      "AI Chat (Cmd+L)",
-      "@codebase для поиска по проекту",
-      "Интеграция Aider, Supermaven",
-      "Автокомплит через Supermaven",
-    ],
-    llm: "OpenAI, Anthropic, Ollama",
-    openSource: true,
-    level: "Начинающий / Средний",
-  },
-  {
-    id: "continue",
-    title: "Continue.dev",
-    description: "Open Source фреймворк для AI-ассистентов. Mission Control для фоновых агентов.",
-    category: "ide",
-    tags: ["IDE", "Open Source", "Framework"],
-    url: "https://continue.dev",
-    pricing: "Бесплатно",
-    pricingType: "free",
-    features: [
-      "Chat, Edit, Agent Mode",
-      "Mission Control для фоновых агентов",
-      "CLI для автоматизации",
-      "Интеграция с GitHub, Sentry, Linear",
-    ],
-    llm: "GPT-4o, Claude 3.5, Codestral, Ollama",
-    openSource: true,
-    level: "Продвинутый",
-  },
-
-  // === FULL-STACK ===
-  {
-    id: "v0",
-    title: "v0 by Vercel",
-    description: "Генерация React/Next.js компонентов из текста. Design Mode, Figma import, GitHub sync.",
-    category: "fullstack",
-    tags: ["UI", "React", "Next.js", "Vercel"],
-    url: "https://v0.dev",
-    pricing: "$20/мес Premium",
-    pricingType: "freemium",
-    features: ["Генерация UI из промптов", "Design Mode", "Figma import", "One-click deploy на Vercel"],
-    llm: "v0 Agent (собственная модель)",
-    openSource: false,
-    level: "Начинающий / Средний",
-  },
-  {
-    id: "bolt",
-    title: "Bolt.new",
-    description: "Full-stack приложения в браузере. WebContainers + Claude AI для мгновенной разработки.",
-    category: "fullstack",
-    tags: ["Full-stack", "Browser", "Supabase"],
-    url: "https://bolt.new",
-    pricing: "$25/мес Pro",
-    pricingType: "freemium",
-    features: [
-      "Zero setup — всё в браузере",
-      "Bolt Cloud для деплоя",
-      "Supabase интеграция",
-      "1M токенов/мес бесплатно",
-    ],
-    llm: "Claude AI",
-    openSource: true,
-    level: "Начинающий / Средний",
-  },
-  {
-    id: "lovable",
-    title: "Lovable",
-    description: "Full-stack приложения из промптов. До 20x быстрее традиционной разработки.",
-    category: "fullstack",
-    tags: ["Full-stack", "No-code", "Supabase"],
-    url: "https://lovable.dev",
-    pricing: "$25/мес Pro",
-    pricingType: "freemium",
-    features: [
-      "Natural language full-stack",
-      "Lovable Cloud backend",
-      "Stripe payments интеграция",
-      "Bidirectional GitHub sync",
-    ],
-    llm: "Google Gemini, GPT",
-    openSource: false,
-    level: "Начинающий",
-  },
-  {
-    id: "replit",
-    title: "Replit Agent",
-    description: "Cloud IDE + AI Agent. Автоматическое тестирование, reflection loop, instant hosting.",
-    category: "fullstack",
-    tags: ["IDE", "Cloud", "Agent"],
-    url: "https://replit.com",
-    pricing: "$20/мес Core",
-    pricingType: "freemium",
-    features: [
-      "Agent тестирует свой код",
-      "Instant hosting",
-      "Collaboration в реальном времени",
-      "PostgreSQL интеграция",
-    ],
-    llm: "Ghostwriter (собственная модель)",
-    openSource: false,
-    level: "Начинающий",
-  },
-  {
-    id: "genkit",
-    title: "Firebase Genkit",
-    description: "Open Source AI Framework от Google. RAG, structured output, tool calling из коробки.",
-    category: "fullstack",
-    tags: ["Framework", "Google", "RAG"],
-    url: "https://firebase.google.com/docs/genkit",
-    pricing: "Бесплатно",
-    pricingType: "free",
-    features: ["Unified AI model interface", "RAG из коробки", "Multimodal support", "Genkit Developer UI"],
-    llm: "Gemini, GPT, Claude, Ollama",
-    openSource: true,
-    level: "Продвинутый",
-  },
-
-  // === VS CODE EXTENSIONS ===
-  {
-    id: "copilot",
-    title: "GitHub Copilot",
-    description: "AI-ассистент от GitHub. Agent mode, code review, PR assist, мультимодельный выбор.",
-    category: "extension",
-    tags: ["VS Code", "GitHub", "Multi-model"],
-    url: "https://github.com/features/copilot",
-    pricing: "$10/мес Pro",
-    pricingType: "freemium",
-    features: ["Inline completions", "Copilot Chat", "Agent mode", "Code review & PR assist"],
-    llm: "GPT-4.1, Claude 3.5 Sonnet, Gemini 2.5 Pro",
-    openSource: false,
-    level: "Начинающий / Средний / Продвинутый",
-  },
-  {
-    id: "codeium",
-    title: "Codeium",
-    description: "Бесплатный unlimited автокомплит. 70+ языков, end-to-end encryption.",
-    category: "extension",
-    tags: ["VS Code", "Free", "70+ languages"],
-    url: "https://codeium.com",
-    pricing: "Бесплатно навсегда",
-    pricingType: "free",
-    features: ["Unlimited автокомплит бесплатно", "AI Chat", "Repo search", "End-to-end encryption"],
-    llm: "Собственные модели",
-    openSource: false,
-    level: "Начинающий / Средний",
-  },
-  {
-    id: "tabnine",
-    title: "Tabnine",
-    description: "AI автодополнение с фокусом на приватность. Private deployment, SOC 2, GDPR.",
-    category: "extension",
-    tags: ["VS Code", "Enterprise", "Privacy"],
-    url: "https://tabnine.com",
-    pricing: "$9/мес Dev",
-    pricingType: "paid",
-    features: ["Private fine-tuning", "VPC/on-prem deployment", "SOC 2, GDPR compliance", "Jira интеграция"],
-    llm: "Собственные модели",
-    openSource: false,
-    level: "Средний / Продвинутый",
-  },
-  {
-    id: "amazon-q",
-    title: "Amazon Q Developer",
-    description: "AI Code Assistant с глубокой интеграцией AWS. Java/.NET transformation.",
-    category: "extension",
-    tags: ["VS Code", "AWS", "Enterprise"],
-    url: "https://aws.amazon.com/q/developer",
-    pricing: "$19/мес Pro",
-    pricingType: "freemium",
-    features: ["Agentic coding", "Java/.NET transformation", "Security scans", "AWS-специфичные запросы"],
-    llm: "Claude (через AWS Bedrock)",
-    openSource: false,
-    level: "Средний / Продвинутый",
-  },
-  {
-    id: "cody",
-    title: "Sourcegraph Cody",
-    description: "AI для больших кодовых баз. Deep codebase context, multi-repo search.",
-    category: "extension",
-    tags: ["VS Code", "Enterprise", "Multi-repo"],
-    url: "https://sourcegraph.com/cody",
-    pricing: "$19/мес Enterprise Starter",
-    pricingType: "freemium",
-    features: ["Deep codebase context", "Multi-repo search", "Customizable prompts", "Self-hosted опция"],
-    llm: "Claude 3.5, GPT-4o-mini, Gemini 2.0 Flash",
-    openSource: false,
-    level: "Продвинутый",
-  },
-  {
-    id: "blackbox",
-    title: "Blackbox AI",
-    description: "Autonomous Coding Agent. 300+ AI моделей, code from images (OCR).",
-    category: "extension",
-    tags: ["VS Code", "Agent", "OCR"],
-    url: "https://blackbox.ai",
-    pricing: "Freemium",
-    pricingType: "freemium",
-    features: ["Autonomous Agent", "300+ AI моделей", "Code from images (OCR)", "Desktop Agent"],
-    llm: "300+ моделей (OpenAI, Claude и др.)",
-    openSource: false,
-    level: "Начинающий / Средний",
-  },
-
-  // === CLI TOOLS ===
-  {
-    id: "aider",
-    title: "Aider",
-    description: "CLI AI Pair Programming. Git-интеграция с auto-commits, voice-to-code, 100+ языков.",
-    category: "cli",
-    tags: ["CLI", "Git", "Open Source"],
-    url: "https://aider.chat",
-    pricing: "Бесплатно",
-    pricingType: "free",
-    features: ["Git auto-commits", "Voice-to-code", "Maps всего codebase", "Локальные модели через Ollama"],
-    llm: "Claude 3.7 Sonnet, DeepSeek, GPT-4o, Ollama",
-    openSource: true,
-    level: "Средний / Продвинутый",
-  },
-  {
-    id: "claude-code",
-    title: "Claude Code",
-    description: "CLI Agentic Coding от Anthropic. Thinking mode, полный контроль над кодовой базой.",
-    category: "cli",
-    tags: ["CLI", "Anthropic", "Agent"],
-    url: "https://claude.ai",
-    pricing: "$20/мес Pro",
-    pricingType: "paid",
-    features: ["Agentic coding в терминале", "Thinking mode", "File system awareness", "Terminal commands"],
-    llm: "Claude 4.1 Opus, Sonnet 4.5",
-    openSource: false,
-    level: "Продвинутый",
-  },
-  {
-    id: "openhands",
-    title: "OpenHands",
-    description: "Open Source AI Agent Platform. Выполнение любых dev задач: coding, browsing, CLI.",
-    category: "cli",
-    tags: ["CLI", "Open Source", "Agent"],
-    url: "https://github.com/OpenHands/OpenHands",
-    pricing: "Бесплатно",
-    pricingType: "free",
-    features: ["Универсальный агент", "Code editing, web browsing, CLI", "Fleet management", "Extensible SDK"],
-    llm: "Любые модели",
-    openSource: true,
-    level: "Продвинутый",
-  },
-  {
-    id: "gpt-engineer",
-    title: "GPT Engineer CLI",
-    description: "Генерация полной кодовой базы из prompt файла. Vision-capable prompts.",
-    category: "cli",
-    tags: ["CLI", "Open Source", "Generator"],
-    url: "https://github.com/AntonOsika/gpt-engineer",
-    pricing: "Бесплатно",
-    pricingType: "free",
-    features: ["Prompt → full codebase", "Clarification questions", "Improve existing code", "Vision support"],
-    llm: "GPT-4, Claude, Azure, локальные",
-    openSource: true,
-    level: "Начинающий / Средний",
-  },
-  {
-    id: "mentat",
-    title: "Mentat",
-    description: "CLI AI Coding Assistant. Multi-file editing, project-wide context.",
-    category: "cli",
-    tags: ["CLI", "Open Source", "Multi-file"],
-    url: "https://github.com/AbanteAI/mentat",
-    pricing: "Бесплатно",
-    pricingType: "free",
-    features: ["Multi-file editing", "Project-wide context", "Git integration", "Понимание новых кодовых баз"],
-    llm: "GPT-4",
-    openSource: true,
-    level: "Средний",
-  },
-  {
-    id: "sweep",
-    title: "Sweep AI",
-    description: "AI Junior Developer. Автоматические PR из GitHub issues, next-edit autocomplete.",
-    category: "cli",
-    tags: ["GitHub", "Agent", "JetBrains"],
-    url: "https://sweep.dev",
-    pricing: "Freemium",
-    pricingType: "freemium",
-    features: ["PR из GitHub issues", "Next-edit autocomplete", "Bug fixes", "JetBrains интеграция"],
-    llm: "Собственные модели",
-    openSource: false,
-    level: "Средний",
-  },
-
-  // === UI/DESIGN TOOLS ===
-  {
-    id: "galileo",
-    title: "Galileo AI",
-    description: "AI UI Generator. Text-to-UI, Image-to-UI, high-fidelity Figma export.",
-    category: "ui",
-    tags: ["UI", "Figma", "Design"],
-    url: "https://galileo.ai",
-    pricing: "Freemium",
-    pricingType: "freemium",
-    features: ["Text-to-UI", "Image-to-UI", "Figma export", "Standard/Experimental modes"],
-    llm: "Gemini 2.5 Flash/Pro",
-    openSource: false,
-    level: "Начинающий",
-  },
-  {
-    id: "uizard",
-    title: "Uizard",
-    description: "AI UI/Prototyping. Autodesigner 2.0, screenshot/sketch scanners, CSS/React export.",
-    category: "ui",
-    tags: ["UI", "Prototyping", "Sketch-to-code"],
-    url: "https://uizard.io",
-    pricing: "$12/мес Pro",
-    pricingType: "freemium",
-    features: ["Autodesigner 2.0", "Screenshot/sketch scanners", "Multi-screen prototypes", "CSS/React export"],
-    llm: "Autodesigner 2.0",
-    openSource: false,
-    level: "Начинающий",
-  },
-  {
-    id: "framer",
-    title: "Framer AI",
-    description: "AI Website Builder. Wireframer (chat to layout), Workshop (AI components).",
-    category: "ui",
-    tags: ["Website", "No-code", "Design"],
-    url: "https://framer.com",
-    pricing: "$10/мес Basic",
-    pricingType: "freemium",
-    features: [
-      "Wireframer chat to layout",
-      "Workshop AI components",
-      "AI Translate",
-      "AI Plugins (GPT, Claude, Gemini)",
-    ],
-    llm: "Собственные + GPT, Claude, Gemini",
-    openSource: false,
-    level: "Начинающий / Средний",
-  },
-  {
-    id: "builder",
-    title: "Builder.io",
-    description: "Visual Development Platform + CMS. AI design-to-code, A/B testing, Figma plugin.",
-    category: "ui",
-    tags: ["CMS", "Design-to-code", "Multi-framework"],
-    url: "https://builder.io",
-    pricing: "$19/мес Pro",
-    pricingType: "freemium",
-    features: ["AI design-to-code", "Visual editor + Headless CMS", "React, Vue, Angular, Qwik", "A/B testing"],
-    llm: "Собственные модели",
-    openSource: false,
-    level: "Средний",
-  },
-  {
-    id: "locofy",
-    title: "Locofy",
-    description: "Design-to-Code AI. Large Design Models, React/Vue/Flutter export, Storybook.",
-    category: "ui",
-    tags: ["Figma", "Design-to-code", "Multi-framework"],
-    url: "https://locofy.ai",
-    pricing: "$24/мес Pro",
-    pricingType: "freemium",
-    features: [
-      "Large Design Models (LDMs)",
-      "Lightning быстрая конверсия",
-      "React, Vue, Flutter export",
-      "Storybook интеграция",
-    ],
-    llm: "Large Design Models",
-    openSource: false,
-    level: "Средний",
-  },
-  {
-    id: "anima",
-    title: "Anima",
-    description: "Figma to React/Vue/HTML. Anima Playground для vibe-coding, one-click deploy.",
-    category: "ui",
-    tags: ["Figma", "React", "Playground"],
-    url: "https://animaapp.com",
-    pricing: "$15/мес Pro",
-    pricingType: "freemium",
-    features: ["Anima Playground vibe-coding", "Figma to React/Vue/HTML", "AI agent для логики", "One-click deploy"],
-    llm: "Claude Sonnet 3.7, GPT o3-mini",
-    openSource: false,
-    level: "Начинающий / Средний",
-  },
-
-  // === MOBILE ===
-  {
-    id: "flutterflow",
-    title: "FlutterFlow",
-    description: "No-Code/Low-Code Mobile Builder. Drag-and-drop, full Flutter code export.",
-    category: "mobile",
-    tags: ["Flutter", "No-code", "Mobile"],
-    url: "https://flutterflow.io",
-    pricing: "$30/мес Standard",
-    pricingType: "freemium",
-    features: [
-      "Drag-and-drop builder",
-      "Full Flutter code export",
-      "Firebase/Supabase интеграция",
-      "One-click publish",
-    ],
-    llm: "AI Assistant",
-    openSource: false,
-    level: "Начинающий / Средний",
-  },
-  {
-    id: "draftbit",
-    title: "Draftbit",
-    description: "Low-Code Mobile Builder. Full React Native code export, real-time preview.",
-    category: "mobile",
-    tags: ["React Native", "Low-code", "Mobile"],
-    url: "https://draftbit.com",
-    pricing: "$19/мес Basic",
-    pricingType: "freemium",
-    features: ["Full React Native export", "Real-time preview", "Reusable Blocks", "REST API интеграции"],
-    llm: "AI assistance",
-    openSource: false,
-    level: "Средний",
-  },
-  {
-    id: "bravo",
-    title: "Bravo Studio",
-    description: "Design-First Mobile Builder. Figma to native iOS/Android apps.",
-    category: "mobile",
-    tags: ["Figma", "Native", "Mobile"],
-    url: "https://bravostudio.app",
-    pricing: "$22/мес Solo",
-    pricingType: "freemium",
-    features: ["Figma to native apps", "Swift/Kotlin compiled", "REST API integration", "AI workflows"],
-    llm: "AI workflows",
-    openSource: false,
-    level: "Начинающий / Средний",
-  },
-
-  // === AI AGENTS ===
-  {
-    id: "devin",
-    title: "Devin",
-    description: "Autonomous AI Software Engineer от Cognition Labs. End-to-end: issue → PR.",
-    category: "agent",
-    tags: ["Agent", "Autonomous", "Enterprise"],
-    url: "https://devin.ai",
-    pricing: "От $20 + ACU",
-    pricingType: "paid",
-    features: ["Полностью автономная разработка", "Planning & execution", "Devin IDE, Wiki", "Jira/Slack интеграция"],
-    llm: "SWE-1.5",
-    openSource: false,
-    level: "Продвинутый",
-  },
-  {
-    id: "swe-agent",
-    title: "SWE-Agent",
-    description: "Open Source AI Agent для GitHub Issues. SOTA на SWE-bench.",
-    category: "agent",
-    tags: ["Agent", "Open Source", "Research"],
-    url: "https://swe-agent.com",
-    pricing: "Бесплатно",
-    pricingType: "free",
-    features: ["GitHub issues → fixes", "SOTA на SWE-bench", "Sandboxed execution", "CTF solving, web tasks"],
-    llm: "GPT-4o, Claude Sonnet 4",
-    openSource: true,
-    level: "Продвинутый",
-  },
-
-  // === ASSISTANTS ===
-  {
-    id: "phind",
-    title: "Phind",
-    description: "AI Search + Coding Assistant. Real-time web search, VS Code интеграция.",
-    category: "assistant",
-    tags: ["Search", "VS Code", "Documentation"],
-    url: "https://phind.com",
-    pricing: "$15/мес Plus",
-    pricingType: "freemium",
-    features: ["AI-powered code search", "Real-time web search", "VS Code интеграция", "Python code execution"],
-    llm: "Phind-70B, GPT-4",
-    openSource: false,
-    level: "Начинающий / Средний",
-  },
-  {
-    id: "claude",
-    title: "Claude",
-    description: "AI от Anthropic. 200K токенов контекста, Artifacts для кода, лидер в бенчмарках.",
-    category: "assistant",
-    tags: ["LLM", "Anthropic", "200K context"],
-    url: "https://claude.ai",
-    pricing: "$20/мес Pro",
-    pricingType: "freemium",
-    features: ["200K токенов контекста", "Artifacts для кода", "Projects для организации", "Лидер в coding бенчмарках"],
-    llm: "Claude 4.1 Opus, Sonnet 4.5",
-    openSource: false,
-    level: "Начинающий / Средний / Продвинутый",
-  },
-  {
-    id: "chatgpt",
-    title: "ChatGPT",
-    description: "Универсальный AI от OpenAI. Canvas для кода, Code Interpreter, GPT-4o.",
-    category: "assistant",
-    tags: ["LLM", "OpenAI", "Canvas"],
-    url: "https://chat.openai.com",
-    pricing: "$20/мес Plus",
-    pricingType: "freemium",
-    features: ["Canvas для редактирования кода", "Code Interpreter", "GPT-4o мультимодальность", "Custom GPTs"],
-    llm: "GPT-4o, GPT-4 Turbo, o1",
-    openSource: false,
-    level: "Начинающий / Средний / Продвинутый",
-  },
-  {
-    id: "supabase-ai",
-    title: "Supabase AI",
-    description: "Backend-as-a-Service + AI. AI Assistant для Postgres, pgvector для RAG.",
-    category: "assistant",
-    tags: ["Backend", "Postgres", "RAG"],
-    url: "https://supabase.com",
-    pricing: "Freemium",
-    pricingType: "freemium",
-    features: [
-      "AI Assistant для SQL",
-      "pgvector для embeddings",
-      "Edge Functions",
-      "Default backend для v0, Bolt, Lovable",
-    ],
-    llm: "AI Assistant",
-    openSource: true,
-    level: "Средний / Продвинутый",
-  },
-]
+import { Search, Loader2 } from "lucide-react"
+import { supabase } from "@/lib/supabase"
+import type { Tool } from "@/lib/types"
 
 export function ToolsGrid({ activeCategory }: { activeCategory: string }) {
   const [search, setSearch] = useState("")
+  const [tools, setTools] = useState<Tool[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchTools() {
+      setLoading(true)
+      setError(null)
+
+      if (!supabase) {
+        setError('Supabase не настроен')
+        setLoading(false)
+        return
+      }
+
+      try {
+        const { data, error: supabaseError } = await supabase
+          .from('tools')
+          .select('*')
+          .order('title')
+
+        if (supabaseError) {
+          throw supabaseError
+        }
+
+        setTools(data || [])
+      } catch (err) {
+        console.error('Error fetching tools:', err)
+        setError('Не удалось загрузить инструменты')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchTools()
+  }, [])
 
   const filtered = tools.filter((tool) => {
-    const matchesCategory = activeCategory === "all" || tool.category === activeCategory
+    const matchesCategory = activeCategory === "all" || tool.category_id === activeCategory
     const matchesSearch =
       tool.title.toLowerCase().includes(search.toLowerCase()) ||
       tool.description.toLowerCase().includes(search.toLowerCase()) ||
@@ -615,13 +55,28 @@ export function ToolsGrid({ activeCategory }: { activeCategory: string }) {
     return matchesCategory && matchesSearch
   })
 
+  if (error) {
+    return (
+      <section id="tools" className="py-16">
+        <div className="mx-auto max-w-7xl px-4 lg:px-8">
+          <div className="py-16 text-center">
+            <p className="text-lg text-destructive">{error}</p>
+            <p className="mt-2 text-sm text-muted-foreground">Попробуйте обновить страницу</p>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section id="tools" className="py-16">
       <div className="mx-auto max-w-7xl px-4 lg:px-8">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-2xl font-bold md:text-3xl">Инструменты</h2>
-            <p className="mt-1 text-muted-foreground">{filtered.length} инструментов для вайбкодинга</p>
+            <p className="mt-1 text-muted-foreground">
+              {loading ? "Загрузка..." : `${filtered.length} инструментов для вайбкодинга`}
+            </p>
           </div>
 
           <div className="relative w-full sm:w-72">
@@ -635,17 +90,33 @@ export function ToolsGrid({ activeCategory }: { activeCategory: string }) {
           </div>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((tool) => (
-            <ToolCard key={tool.id} tool={tool} />
-          ))}
-        </div>
-
-        {filtered.length === 0 && (
-          <div className="py-16 text-center">
-            <p className="text-lg text-muted-foreground">Ничего не найдено</p>
-            <p className="mt-2 text-sm text-muted-foreground">Попробуйте изменить поисковый запрос</p>
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
+        ) : (
+          <>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {filtered.map((tool) => (
+                <ToolCard
+                  key={tool.id}
+                  tool={{
+                    ...tool,
+                    category: tool.category_id,
+                    pricingType: tool.pricing_type,
+                    openSource: tool.open_source,
+                  }}
+                />
+              ))}
+            </div>
+
+            {filtered.length === 0 && (
+              <div className="py-16 text-center">
+                <p className="text-lg text-muted-foreground">Ничего не найдено</p>
+                <p className="mt-2 text-sm text-muted-foreground">Попробуйте изменить поисковый запрос</p>
+              </div>
+            )}
+          </>
         )}
       </div>
     </section>

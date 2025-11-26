@@ -1,19 +1,35 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
-import { Zap, Code2, Palette, Layers, Terminal, Bot, Smartphone, GitBranch, Sparkles } from "lucide-react"
+import { 
+  Zap, 
+  Code2, 
+  Palette, 
+  Layers, 
+  Terminal, 
+  Bot, 
+  Smartphone, 
+  GitBranch, 
+  Sparkles,
+  Loader2,
+  type LucideIcon 
+} from "lucide-react"
+import { supabase } from "@/lib/supabase"
+import type { Category } from "@/lib/types"
 
-const categories = [
-  { id: "all", label: "Все", icon: Zap },
-  { id: "ide", label: "AI IDE", icon: Code2 },
-  { id: "fullstack", label: "Full-stack", icon: Layers },
-  { id: "extension", label: "Расширения", icon: GitBranch },
-  { id: "cli", label: "CLI", icon: Terminal },
-  { id: "ui", label: "UI/Design", icon: Palette },
-  { id: "mobile", label: "Mobile", icon: Smartphone },
-  { id: "agent", label: "AI Agents", icon: Bot },
-  { id: "assistant", label: "Ассистенты", icon: Sparkles },
-]
+// Map icon names to actual Lucide icon components
+const iconMap: Record<string, LucideIcon> = {
+  Zap,
+  Code2,
+  Palette,
+  Layers,
+  Terminal,
+  Bot,
+  Smartphone,
+  GitBranch,
+  Sparkles,
+}
 
 interface CategoriesProps {
   active: string
@@ -21,12 +37,57 @@ interface CategoriesProps {
 }
 
 export function Categories({ active, onChange }: CategoriesProps) {
+  const [categories, setCategories] = useState<Category[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchCategories() {
+      if (!supabase) {
+        console.warn('Supabase not configured')
+        setLoading(false)
+        return
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('categories')
+          .select('*')
+          .order('sort_order')
+
+        if (error) {
+          throw error
+        }
+
+        setCategories(data || [])
+      } catch (err) {
+        console.error('Error fetching categories:', err)
+        // Fallback to empty array - the UI will just not show categories
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchCategories()
+  }, [])
+
+  if (loading) {
+    return (
+      <section className="border-b border-border py-6">
+        <div className="mx-auto max-w-7xl px-4 lg:px-8">
+          <div className="flex items-center justify-center py-2">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section className="border-b border-border py-6">
       <div className="mx-auto max-w-7xl px-4 lg:px-8">
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
           {categories.map((category) => {
-            const Icon = category.icon
+            const Icon = iconMap[category.icon] || Zap
             return (
               <button
                 key={category.id}
